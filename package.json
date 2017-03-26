@@ -1,0 +1,25 @@
+{
+  "name": "DBMS",
+  "version": "1.0.0",
+  "description": "a dbms demo",
+  "main": "config.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "dependencies": {
+    "colors-cli": "^1.0.7",
+    "figlet": "^1.2.0",
+    "object.values": "^1.0.4",
+    "prettytable": "^0.3.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node db.js"
+  },
+  "keywords": [
+    "dbms",
+    "node"
+  ],
+  "author": "liuwei",
+  "license": "ISC"
+}

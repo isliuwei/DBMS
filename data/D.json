@@ -1,0 +1,15 @@
+{
+  "name": "D",
+  "users": [
+    "ROOT",
+    "ADMIN",
+    "A"
+  ],
+  "data": [
+    {
+      "NO": "INT",
+      "NAME": "CHAR",
+      "AGE": "INT"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "username": "ROOT",
+    "password": "ROOT",
+    "powers": "ALL"
+  },
+  {
+    "username": "ADMIN",
+    "password": "ADMIN",
+    "powers": "ALL"
+  },
+  {
+    "username": "A",
+    "password": "A",
+    "powers": [
+      "SELECT",
+      "SHOW",
+      "GRANT",
+      "CREATE",
+      "DROP"
+    ]
+  },
+  {
+    "username": "B",
+    "password": "B",
+    "powers": []
+  }
+]

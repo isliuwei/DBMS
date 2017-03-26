@@ -1,0 +1,51 @@
+{
+  "name": "STUDENTS",
+  "users": [
+    "ADMIN",
+    "ROOT"
+  ],
+  "data": [
+    {
+      "NO": "INT",
+      "NAME": "CHAR",
+      "AGE": "INT",
+      "SEX": "CHAR"
+    },
+    {
+      "NO": "1001",
+      "NAME": "TINA",
+      "AGE": "23",
+      "SEX": "FEMALE"
+    },
+    {
+      "NO": "1002",
+      "NAME": "LINDA",
+      "AGE": "23",
+      "SEX": "FEMALE"
+    },
+    {
+      "NO": "1003",
+      "NAME": "TOM",
+      "AGE": "24",
+      "SEX": "MALE"
+    },
+    {
+      "NO": "1004",
+      "NAME": "BELLA",
+      "AGE": "27",
+      "SEX": "FEMALE"
+    },
+    {
+      "NO": "1005",
+      "NAME": "JACK",
+      "AGE": "24",
+      "SEX": "MALE"
+    },
+    {
+      "NO": "1006",
+      "NAME": "ROSE",
+      "AGE": "25",
+      "SEX": "FEMALE"
+    }
+  ]
+}

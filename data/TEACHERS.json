@@ -1,0 +1,48 @@
+{
+  "name": "TEACHERS",
+  "users": ["ADMIN","ROOT"],
+  "data": [
+    {
+      "NO": "INT",
+      "NAME": "CHAR",
+      "AGE": "INT",
+      "SUBJECT": "CHAR"
+    },
+    {
+      "NO": "2001",
+      "NAME": "ZHAO",
+      "AGE": "29",
+      "SUBJECT": "ENGLISH"
+    },
+    {
+      "NO": "2002",
+      "NAME": "QIAN",
+      "AGE": "30",
+      "SUBJECT": "CHINESE"
+    },
+    {
+      "NO": "2003",
+      "NAME": "SUN",
+      "AGE": "31",
+      "SUBJECT": "MATH"
+    },
+    {
+      "NO": "2004",
+      "NAME": "LI",
+      "AGE": "34",
+      "SUBJECT": "COMPUTER"
+    },
+    {
+      "NO": "2005",
+      "NAME": "ZHOU",
+      "AGE": "35",
+      "SUBJECT": "PHYSICS"
+    },
+    {
+      "NO": "2006",
+      "NAME": "WU",
+      "AGE": "33",
+      "SUBJECT": "MATH"
+    }
+  ]
+}
