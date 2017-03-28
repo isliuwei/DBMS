@@ -3,13 +3,19 @@
   "users": [
     "ROOT",
     "ADMIN",
-    "A"
+    "A",
+    "B"
   ],
   "data": [
     {
       "NO": "INT",
       "NAME": "CHAR",
       "AGE": "INT"
+    },
+    {
+      "NO": "2210",
+      "NAME": "DBA",
+      "AGE": "23"
     }
   ]
 }

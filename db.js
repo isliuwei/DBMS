@@ -239,6 +239,7 @@ DB.selectTable = function() {
 // drop table 删除表
 DB.dropTable = function() {
 	var tableName = this.sqlStr.substring(11);
+	var user = this.user;
 	var rs = fs.createReadStream('data/tablesList.txt');
 	rs.setEncoding('utf8');
 	rs.on('data', function(chunk) {
@@ -251,6 +252,37 @@ DB.dropTable = function() {
 			fs.unlink(path, function() {
 				// console.info();
 				console.log(error('删除表 ' + tableName + ' 成功！'));
+
+				// 存在用户
+				if (user) {
+					//删除关系表中的权限
+					var rs = fs.createReadStream('data/usersList.json');
+					rs.setEncoding('utf8');
+					rs.on('data', function(chunk) {
+						var usersList = JSON.parse(chunk);
+						var arr = [];
+						for (var i = 0; i < usersList.length; i++) {
+							arr.push(usersList[i]['username']);
+						}
+						if (arr.indexOf(user) !== -1) {
+							var usersObj = {};
+							for (var i = 0; i < usersList.length; i++) {
+								if (usersList[i]['username'] === user) {
+									usersObj = usersList[i];
+								}
+							}
+							var powersObj = usersObj.powers;							
+							// drop操作的同时将该用户对该表的权限删除
+							delete powersObj[tableName];
+							usersObj['powers'] = powersObj;
+							//	写入文件
+							usersList[usersList.indexOf(usersObj)] = usersObj;
+							var ws = fs.createWriteStream('data/usersList.json');
+							ws.write(JSON.stringify(usersList, null, 2));
+						}
+					});
+					//删除关系表中的权限
+				} 
 			});
 		} else {
 			console.log(notice(tableName) + error('不存在！无法删除该关系！'));
@@ -524,17 +556,25 @@ DB.createUser = function() {
 				var info = {};
 				info.username = username;
 				info.password = password;
-				info.powers = '';
-				infos.push(info);
-				var ws = fs.createWriteStream('data/usersList.json');
-				ws.write(JSON.stringify(infos, null, 2));
-				console.log(error('用户 ' + username + ' 创建成功！'));
+				//
+				var rs = fs.createReadStream('data/tablesList.txt');
+				rs.setEncoding('utf8');
+				rs.on('data', function(chunk) {
+					var tablesList = chunk.split(',');
+					info.powers = {};
+					for (var i = 0; i < tablesList.length; i++) {
+						info.powers[tablesList[i]] = [];
+					}
+					infos.push(info);
+					var ws = fs.createWriteStream('data/usersList.json');
+					ws.write(JSON.stringify(infos, null, 2));
+					console.log(error('用户 ' + username + ' 创建成功！'));
+				});
+
 			}
 
 		});
-
 	}
-
 	createUser();
 }
 
@@ -546,104 +586,107 @@ var grantPower = function(sql) {
 	var tableName = arr[3];
 	var username = arr[5];
 
-	function cheackPower() {
-		var powersList = ['CREATE', 'DROP', 'ALTER', 'DELETE', 'UPDATE', 'SELECT', 'SHOW', 'GRANT', 'REVOKE'];
-		if (powersList.indexOf(fn) === -1) {
-			console.info();
-			console.log(error('输入的权限关键字 ') + notice(fn) + error(' 不存在! 权限关键字有：CREATE,DROP,ALTER,DELETE,UPDATE,SELECT,SHOW,GRANT,REVOKE'));
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-	function checkTableAndUser() {
-		var isPower = cheackPower();
-		if (isPower) {
-			var rs = fs.createReadStream('data/tablesList.txt');
-			rs.setEncoding('utf8');
-			rs.on('data', function(chunk) {
-				var tablesList = chunk.split(',');
-				if (tablesList.indexOf(tableName) === -1) {
-					console.info();
-					console.log(error('输入的关系 ') + notice(tableName) + error(' 不存在! 无法完成grant操作！'));
-				} else {
-					var rs = fs.createReadStream('data/usersList.json');
-					rs.setEncoding('utf8');
-					rs.on('data', function(chunk) {
-						var infos = JSON.parse(chunk);
-						var arr = [];
-						for (var i = 0; i < infos.length; i++) {
-							arr.push(infos[i]['username']);
-						}
-						if (arr.indexOf(username) === -1) {
-							console.info();
-							console.log(error('用户 ' + notice(username) + error(' 不存在！无法完成grant操作！')));
-
-						} else {
-							grantUserToTable();
-							grantPowerToUser();
-							console.info();
-							console.log(error('权限赋予操作 grant 成功！'));
-						}
-					});
-				}
-			});
-		}
-	}
+	grantPowerAndTableToUser(tableName, username);
 
 
-
-	function grantUserToTable() {
-		var rs = fs.createReadStream(`data/${tableName}.json`);
-		rs.setEncoding('utf8');
-		rs.on('data', function(chunk) {
-			table = JSON.parse(chunk);
-			if (table.users.indexOf(username) === -1) {
-				table.users.push(username);
-				var ws = fs.createWriteStream(`data/${tableName}.json`);
-				ws.write(JSON.stringify(table, null, 2));
-				// console.info();
-				console.log(error('用户 ') + notice(username) + error(' 被赋予关系 ') + notice(tableName) + error(' 操作权限！'));
-
-			} else {
-				//console.log(error('用户 ')+notice(username)+error(' 已经被赋予关系 ')+notice(tableName)+error(' 操作权限！请勿重复添加！'));
-			}
-		});
-	}
-
-	function grantPowerToUser() {
+	function grantPowerAndTableToUser(table, user) {
 		var rs = fs.createReadStream('data/usersList.json');
 		rs.setEncoding('utf8');
 		rs.on('data', function(chunk) {
-			users = JSON.parse(chunk);
-			var userArr = [];
-			for (var i = 0; i < users.length; i++) {
-				userArr.push(users[i]['username']);
-			}
-			var obj = users[userArr.indexOf(username)];
-			if (obj.powers.indexOf(fn) !== -1) {
-				console.log(error(fn + ' 已存在!无法添加！'));
-			} else {
 
-				if (obj.powers === '') {
-					obj.powers = [];
-					obj.powers.push(fn);
+			var usersList = JSON.parse(chunk);
+			var arr = [];
+			for (var i = 0; i < usersList.length; i++) {
+				arr.push(usersList[i]['username']);
+			}
+			if (arr.indexOf(username) === -1) {
+				console.info();
+				console.info();
+				console.log(error('用户 ' + notice(username) + error(' 不存在！无法完成grant操作!')));
+			} else {
+				if (username === 'ROOT' || username === 'ADMIN') {
+					console.info();
+					console.info();
+					console.log(error('\nwarning: 根用户或者管理员用户的权限无法修改!\n'));
 				} else {
-					obj.powers.push(fn);
+					var usersObj = {};
+					for (var i = 0; i < usersList.length; i++) {
+						if (usersList[i]['username'] === username) {
+							usersObj = usersList[i];
+						}
+					}
+					var powersObj = usersObj.powers;
+					var powersTableArr = Object.keys(powersObj);
+					if (powersTableArr.indexOf(tableName) !== -1) {
+						var powersList = ['CREATE', 'DROP', 'ALTER', 'DELETE', 'UPDATE', 'SELECT', 'SHOW', 'GRANT', 'REVOKE', 'INSERT', 'VIEW'];
+						if (powersList.indexOf(fn) === -1) {
+							console.info();
+							console.info();
+							console.log(error('输入的权限关键字 ') + notice(fn) + error(' 不存在! 无法完成grant操作! \n权限关键字有：CREATE,DROP,ALTER,DELETE,UPDATE,SELECT,SHOW,GRANT,REVOKE,INSERT', 'VIEW'));
+						} else {
+							var powersInTable = powersObj[powersTableArr[powersTableArr.indexOf(tableName)]];
+							if (powersInTable.indexOf(fn) === -1) {
+								//	进行添加操作
+								powersInTable.push(fn);
+								powersObj[tableName] = powersInTable;
+								usersObj['powers'] = powersObj;
+								//	写入文件
+								usersList[usersList.indexOf(usersObj)] = usersObj;
+								var ws = fs.createWriteStream('data/usersList.json');
+								ws.write(JSON.stringify(usersList, null, 2));
+								console.info();
+								console.info();
+								console.log(('关系' + tableName + '的' + fn + '权限赋给' + '用户' + username) + error(' 注：权限赋予后重新登录才能生效！'));
+							} else {
+								console.info();
+								console.info();
+								console.log(error('权限 ') + notice(fn) + error(' 已经被赋予！无需重复进行grant操作!'));
+							}
+						}
+					} else {
+						var rs = fs.createReadStream('data/tablesList.txt');
+						rs.setEncoding('utf8');
+						rs.on('data', function(chunk) {
+							var tablesList = chunk.split(',');
+							if (tablesList.indexOf(tableName) !== -1) {
+								var powersObj = usersObj.powers;
+								powersObj[tableName] = [];
+								var powersList = ['CREATE', 'DROP', 'ALTER', 'DELETE', 'UPDATE', 'SELECT', 'SHOW', 'GRANT', 'REVOKE', 'INSERT', 'VIEW'];
+								if (powersList.indexOf(fn) === -1) {
+									console.info();
+									console.info();
+									console.log(error('输入的权限关键字 ') + notice(fn) + error(' 不存在! 无法完成grant操作! \n权限关键字有：CREATE,DROP,ALTER,DELETE,UPDATE,SELECT,SHOW,GRANT,REVOKE,INSERT,VIEW'));
+								} else {
+
+									//	进行添加操作
+									powersObj[tableName].push(fn)
+										// console.log(powersObj);
+									usersObj['powers'] = powersObj;
+
+									//	写入文件
+									usersList[usersList.indexOf(usersObj)] = usersObj;
+									var ws = fs.createWriteStream('data/usersList.json');
+									ws.write(JSON.stringify(usersList, null, 2));
+									console.info();
+									console.info();
+									console.log(('关系' + tableName + '的' + fn + '权限赋给' + '用户' + username) + error(' 注：权限赋予后重新登录才能生效！'));
+								}
+							} else {
+								console.info();
+								console.info();
+								console.log(error('关系 ') + notice(tableName) + error(' 不存在！无法完成grant操作!'));
+							}
+						});
+
+
+					}
 				}
-				users[userArr.indexOf(username)] = obj;
-				// console.log(users);
-				var ws = fs.createWriteStream('data/usersList.json');
-				ws.write(JSON.stringify(users, null, 2));
-				console.log(error('添加 ' + fn + ' 操作成功！'));
+
 			}
 
 		});
 
 	}
-
-	checkTableAndUser();
 
 };
 
@@ -654,53 +697,74 @@ DB.revoke = function() {
 	var tableName = arr[3];
 	var username = arr[5];
 
-	function revokeUserToTable() {
-		var rs = fs.createReadStream(`data/${tableName}.json`);
-		rs.setEncoding('utf8');
-		rs.on('data', function(chunk) {
-			table = JSON.parse(chunk);
-			if (table.users.indexOf(username) !== -1) {
-				table.users.splice(table.users.indexOf(username));
-				// console.log(table);
-				var ws = fs.createWriteStream(`data/${tableName}.json`);
-				ws.write(JSON.stringify(table, null, 2));
-				console.info();
-				console.log(error('用户 ') + notice(username) + error(' 撤销成功'));
-			} else {
-				console.info();
-				// console.log(error('用户不存在！') + notice(username) + error(' 无法进行撤销操作！'));
-			}
-		});
+	revokePowerAndTableToUser(tableName, username);
 
-	}
-
-	revokeUserToTable();
-
-	function revokePowerToUser() {
+	function revokePowerAndTableToUser(table, user) {
 		var rs = fs.createReadStream('data/usersList.json');
 		rs.setEncoding('utf8');
 		rs.on('data', function(chunk) {
-			users = JSON.parse(chunk);
-			var userArr = [];
-			for (var i = 0; i < users.length; i++) {
-				userArr.push(users[i]['username']);
+			var usersList = JSON.parse(chunk);
+			var arr = [];
+			for (var i = 0; i < usersList.length; i++) {
+				arr.push(usersList[i]['username']);
 			}
-			var obj = users[userArr.indexOf(username)];
-			if (obj.powers.indexOf(fn) !== -1) {
-				obj.powers.splice(obj.powers.indexOf(fn));
-				var ws = fs.createWriteStream('data/usersList.json');
-				ws.write(JSON.stringify(users, null, 2));
+			if (arr.indexOf(username) === -1) {
 				console.info();
-				console.log(error('撤销 ' + fn + ' 操作成功！'));
+				console.info();
+				console.log(error('用户 ' + notice(username) + error(' 不存在！无法完成revoke操作!')));
 			} else {
-				console.info();
-				console.log(notice(fn) + error(' 操作不存在！撤销失败！'));
-			}
+				if (username === 'ROOT' || username === 'ADMIN') {
+					console.info();
+					console.info();
+					console.log(error('\nwarning: 根用户或者管理员用户的权限无法撤销!\n'));
+				} else {
+					var usersObj = {};
+					for (var i = 0; i < usersList.length; i++) {
+						if (usersList[i]['username'] === username) {
+							usersObj = usersList[i];
+						}
+					}
+					var powersObj = usersObj.powers;
+					var powersTableArr = Object.keys(powersObj);
+					if (powersTableArr.indexOf(tableName) !== -1) {
+						var powersList = ['CREATE', 'DROP', 'ALTER', 'DELETE', 'UPDATE', 'SELECT', 'SHOW', 'GRANT', 'REVOKE', 'INSERT', 'VIEW'];
+						if (powersList.indexOf(fn) === -1) {
+							console.info();
+							console.info();
+							console.log(error('输入的权限关键字 ') + notice(fn) + error(' 不存在! 无法完成revoke操作! \n权限关键字有：CREATE,DROP,ALTER,DELETE,UPDATE,SELECT,SHOW,GRANT,REVOKE,INSERT,VIEW'));
+						} else {
+							var powersInTable = powersObj[powersTableArr[powersTableArr.indexOf(tableName)]];
+							if (powersInTable.indexOf(fn) === -1) {
+								console.info();
+								console.info();
+								console.log(error('权限 ') + notice(fn) + error(' 未被赋予！无法完成revoke操作!'));
+							} else {
+								// console.log('revoke 操作');
+								powersInTable.splice(powersInTable.indexOf(fn), 1);
+
+								powersObj[tableName] = powersInTable;
+								usersObj['powers'] = powersObj;
+								usersList[usersList.indexOf(usersObj)] = usersObj;
+								//	写入文件
+								var ws = fs.createWriteStream('data/usersList.json');
+								ws.write(JSON.stringify(usersList, null, 2));
+								console.info();
+								console.info();
+								console.log('撤销用户' + username + '对关系' + tableName + '的' + fn + '权限');
+							}
+						}
+
+					} else {
+						console.info();
+						console.info();
+						console.log(error('关系 ') + notice(tableName) + error(' 不存在！无法完成grant操作!'));
+					}
+				}
+
+			};
 
 		});
-
 	}
-	revokePowerToUser();
 
 }
 
@@ -764,139 +828,214 @@ DB.init = function(sql, powers) {
 		}
 
 	} else {
-		var isCreate = powers.includes('CREATE');
-		var isDrop = powers.includes('DROP');
-		var isAlter = powers.includes('ALTER');
-		var isDelete = powers.includes('DELETE');
-		var isUpdate = powers.includes('UPDATE');
-		var isSelect = powers.includes('SELECT');
-		var isShow = powers.includes('SHOW');
-		var isGrant = powers.includes('GRANT');
-		var isRevoke = powers.includes('REVOKE');
+
+
 		this.sqlStr = sql.toString().toUpperCase();
-
-
-		
-		if (isCreate) {
-			var createTable = this.sqlStr.startsWith('CREATE TABLE');
-			var createView = this.sqlStr.startsWith('CREATE VIEW');
-			var createIndex = this.sqlStr.startsWith('CREATE INDEX');
-			var createUser = this.sqlStr.startsWith('CREATE USER');
-			if (createTable) {
+		var tables = Object.keys(powers);
+		// console.log(tables);
+		if (this.sqlStr.startsWith('CREATE TABLE')) {
+			var arr = es7_values(powers);
+			var isCreate = false;
+			for (var i = 0; i < arr.length; i++) {
+				for (var j = 0; j < arr[i].length; j++) {
+					if (arr[i][j].indexOf('CREATE') !== -1) {
+						isCreate = true;
+					}
+				}
+			}
+			if (isCreate) {
 				this.createTable();
-			} else if (createView) {
-				this.createView();
-			} else if (createIndex) {
-				this.createIndex();
-			} else if (createUser) {
-				this.createUser();
 			} else {
-				// console.log('无 create 权限');
+				console.info();
+				console.log('无 create 权限！');
+				console.info();
 			}
-		} else {
-			// console.log('无 create 权限');
 		}
 
+		if (this.sqlStr.startsWith('DROP TABLE')) {
+			var tableName = this.sqlStr.substring(11);
+			var powers = powers[tableName];
 
-		if (isDrop) {
-			var dropTable = this.sqlStr.startsWith('DROP TABLE');
-			var dropView = this.sqlStr.startsWith('DROP VIEW');
-			var dropIndex = this.sqlStr.startsWith('DROP INDEX');
-			if (dropTable) {
+			if (tables.indexOf(tableName) !== -1 && powers.indexOf('DROP') !== -1) {
 				this.dropTable();
-			} else if (dropView) {
-				this.dropView();
-			} else if (dropIndex) {
-				this.dropIndex();
 			} else {
-				// console.log('无 drop 权限');
+				console.info();
+				console.log('无 drop 权限！');
+				console.info();
 			}
-		} else {
-			// console.log('无 drop 权限');
 		}
 
+		if (this.sqlStr.startsWith('ALTER TABLE')) {
+			var tableName = this.sqlStr.split(' ')[2];
+			var powers = powers[tableName];
 
-
-		if (isAlter) {
-			var alterTable = this.sqlStr.startsWith('ALTER TABLE');
-			if (alterTable) {
+			if (tables.indexOf(tableName) !== -1 && powers.indexOf('ALTER') !== -1) {
 				this.alterTable();
 			} else {
-				// console.log('无 alter 权限');
+				console.info();
+				console.log('无 alter 权限！');
+				console.info();
 			}
-		} else {
-			// console.log('无 alter 权限');
 		}
 
+		if (this.sqlStr.startsWith('INSERT INTO')) {
+			var tableName = this.sqlStr.substring(12, this.sqlStr.indexOf("(") - 7);
+			var powers = powers[tableName];
 
+			if (tables.indexOf(tableName) !== -1 && powers.indexOf('INSERT') !== -1) {
+				this.insertTable();
+			} else {
+				console.info();
+				console.log('无 insert 权限！');
+				console.info();
+			}
 
-		if (isDelete) {
-			var deleteTable = this.sqlStr.startsWith('DELETE FROM');
-			if (deleteTable) {
+		}
+
+		if (this.sqlStr.startsWith('DELETE FROM')) {
+
+			var tableName = this.sqlStr.split(' ')[2];
+			var powers = powers[tableName];
+
+			if (tables.indexOf(tableName) !== -1 && powers.indexOf('DELETE') !== -1) {
 				this.deleteTable();
 			} else {
-				// console.log('无 delete 权限');
+				console.info();
+				console.log('无 delete 权限！');
+				console.info();
 			}
-		} else {
-			// console.log('无 delete 权限');
+
 		}
 
-		if (isUpdate) {
-			var updateTable = this.sqlStr.startsWith('UPDATE');
-			if (updateTable) {
+		if (this.sqlStr.startsWith('UPDATE')) {
+
+			var tableName = this.sqlStr.split(' ')[1];
+			var powers = powers[tableName];
+
+			if (tables.indexOf(tableName) !== -1 && powers.indexOf('UPDATE') !== -1) {
 				this.updateTable();
 			} else {
-				// console.log('无 update 权限');
+				console.info();
+				console.log('无 update 权限！');
+				console.info();
 			}
-		} else {
-			// console.log('无 update 权限');
+
 		}
 
-		if (isSelect) {
-			var selectTable = this.sqlStr.startsWith('SELECT');
-			if (selectTable) {
+		if (this.sqlStr.startsWith('SELECT')) {
+
+			var tableName = this.sqlStr.substring(14);
+			var powers = powers[tableName];
+
+			if (tables.indexOf(tableName) !== -1 && powers.indexOf('SELECT') !== -1) {
 				this.selectTable();
 			} else {
-				// console.log('无 select 权限');
+				console.info();
+				console.log('无 select 权限！');
+				console.info();
 			}
-		} else {
-			// console.log('无该 select 权限');
+
 		}
 
-		if (isShow) {
-			var showTables = this.sqlStr.startsWith('SHOW TABLES');
-			if (showTables) {
-				this.showTables();
-			} else {
-				// console.log('无 show 权限');
-			}
-		} else {
-			// console.log('无 show 权限');
-		}
+		if (this.sqlStr.startsWith('GRANT')) {
 
-		if (isGrant) {
-			var grant = this.sqlStr.startsWith('GRANT');
-			if (grant) {
+			var arr = es7_values(powers);
+			var isGrant = false;
+			for (var i = 0; i < arr.length; i++) {
+				for (var j = 0; j < arr[i].length; j++) {
+					if (arr[i][j].indexOf('GRANT') !== -1) {
+						isGrant = true;
+					}
+				}
+			}
+			if (isGrant) {
 				grantPower(this.sqlStr);
 			} else {
-				// console.log('无 grant 权限');
+				console.info();
+				console.log('无 grant 权限！');
+				console.info();
 			}
-			
-		} else {
-			// console.log('无 grant 权限');
+
 		}
 
-		if (isRevoke) {
-			var revoke = this.sqlStr.startsWith('REVOKE');
-			if (revoke) {
+		if (this.sqlStr.startsWith('REVOKE')) {
+
+			var arr = es7_values(powers);
+			var isRevoke = false;
+			for (var i = 0; i < arr.length; i++) {
+				for (var j = 0; j < arr[i].length; j++) {
+					if (arr[i][j].indexOf('GRANT') !== -1) {
+						isRevoke = true;
+					}
+				}
+			}
+			if (isRevoke) {
 				this.revoke();
 			} else {
-				// console.log('无 revoke 权限');
+				console.info();
+				console.log('无 revoke 权限！');
+				console.info();
 			}
-			
-		} else {
-			// console.log('无 revoke 权限');
+
 		}
+
+
+		if (this.sqlStr.startsWith('CREATE VIEW')) {
+			var arr = this.sqlStr.split(' ');
+			var tableName = arr[7];
+			var powers = powers[tableName];
+
+			if (tables.indexOf(tableName) !== -1 && powers.indexOf('VIEW') !== -1) {
+				this.createView();
+			} else {
+				console.info();
+				console.log('无 create view 权限！');
+				console.info();
+			}
+
+		}
+
+
+		if (this.sqlStr.startsWith('DROP VIEW')) {
+			var arr = es7_values(powers);
+			var isDropView = false;
+			for (var i = 0; i < arr.length; i++) {
+				for (var j = 0; j < arr[i].length; j++) {
+					if (arr[i][j].indexOf('VIEW') !== -1) {
+						isDropView = true;
+					}
+				}
+			}
+			if (isDropView) {
+				this.dropView();
+			} else {
+				console.info();
+				console.log('无 drop view 权限！');
+				console.info();
+			}
+		}
+
+		if (this.sqlStr.startsWith('SHOW TABLES')) {
+
+			var arr = es7_values(powers);
+			var isShow = false;
+			for (var i = 0; i < arr.length; i++) {
+				for (var j = 0; j < arr[i].length; j++) {
+					if (arr[i][j].indexOf('SHOW') !== -1) {
+						isShow = true;
+					}
+				}
+			}
+			if (isShow) {
+				this.showTables();
+			} else {
+				console.info();
+				console.log('无 show tables 权限！');
+				console.info();
+			}
+
+		}
+
 	}
 
 }
@@ -915,8 +1054,8 @@ function power(isPower, powers) {
 			case 'exit':
 				// console.log(error("\nDB_SQL程序退出!\n"));
 				console.log(error("\n****************************************************************\n" +
-						"*                         DB_SQL 程序退出!                     *" +
-						"\n****************************************************************\n"));
+					"*                         DB_SQL 程序退出!                     *" +
+					"\n****************************************************************\n"));
 
 				rl.close();
 				process.exit(0);
@@ -970,7 +1109,7 @@ function power(isPower, powers) {
 console.log(notice("\n****************************************************************\n" +
 	"*         数据库系统DB_SQL登录页面！请输入用户名和密码！       *" +
 	"\n****************************************************************\n"));
-console.log("请输入用户名和密码（输入格式为：用户名@密码，例如：admin@123456） 要想使用默认用户登录请输入 :root\n");
+console.log("请输入用户名和密码（输入格式为：用户名@密码，例如：admin@123456） \n要想使用默认用户(管理员)登录请输入 :root\n");
 
 
 rl.question(">>>>>", function(input) {
@@ -997,19 +1136,72 @@ rl.question(">>>>>", function(input) {
 					console.log(notice("\n****************************************************************\n" +
 						"*  登录成功！欢迎进入DB_SQL系统！输入'info'查看基本信息信息！  *" +
 						"\n****************************************************************\n"));
-					console.log('当前用户：' + username);
-					var powers = infos[usernameArr.indexOf(username)].powers;
-					var isPowers;
-					if (!powers) {
-						console.log('拥有权限：NULL (没有任何权限，必须授予权限)');
-						console.info();
-						isPowers = 0;
-						power(isPowers, powers);
+					if (username === 'ROOT' || username === 'ADMIN') {
+						power(1, 'ALL'); 
 					} else {
-						console.log('拥有权限：' + powers);
+						DB.user = username;
+						var usersObj = {};
+						for (var i = 0; i < infos.length; i++) {
+							if (infos[i]['username'] === username) {
+								usersObj = infos[i];
+							}
+						}
+
+						var powerListHead = ['#TABLES#', 'CREATE', 'DROP', 'ALTER', 'DELETE', 'UPDATE', 'SELECT', 'SHOW', 'GRANT', 'REVOKE', 'INSERT', 'VIEW'];
+						var powerList = ['CREATE', 'DROP', 'ALTER', 'DELETE', 'UPDATE', 'SELECT', 'SHOW', 'GRANT', 'REVOKE', 'INSERT', 'VIEW'];
+						var rows = [];
+						var v = [];
+						for (var k in usersObj.powers) {
+							var values = usersObj.powers[k];
+							v.push(values);
+						}
+
+						var y = [];
+						for (var i = 0; i < v.length; i++) {
+							var x = [];
+							for (var j = 0; j < powerList.length; j++) {
+								if (inArray(powerList, v[i][j]) || inArray(powerList, v[i][j]) === 0) {
+									x[inArray(powerList, v[i][j])] = '√';
+								}
+							}
+							y.push(x);
+						}
+
+						var tb = Object.keys(usersObj.powers);
+						for (var i = 0; i < tb.length; i++) {
+							y[i].unshift(tb[i]);
+						}
+
+						for (var i = 0; i < y.length; i++) {
+							for (var j = 0; j < 12; j++) {
+								if (!y[i][j]) {
+									y[i][j] = "-";
+								}
+							}
+						}
+
+
+						function inArray(arr, item) {
+							if (arr) {
+								for (var i = 0; i < arr.length; i++) {
+									if (arr[i] === item) {
+										return i;
+									}
+								}
+								return false;
+							}
+						}
+
+						console.log('当前用户：' + username);
 						console.info();
-						isPowers = 1;
-						power(isPowers, powers);
+						console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>用户权限一览表<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+						console.info();
+						pt = new PrettyTable();
+						pt.create(powerListHead, y);
+						pt.print();
+						var powers = usersObj.powers;
+						power(1, powers);
+
 					}
 
 				} else {
