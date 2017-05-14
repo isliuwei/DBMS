@@ -1,0 +1,8 @@
+关系 C 的数据字典: c c# int not null,cname char,teacher char,primary key('c#')
++---------+------+------+-------------+
+| Field   | Type | NULL | Remark      | 
++---------+------+------+-------------+
+| C#      | INT  | YES  | primary key | 
+| CNAME   | CHAR | NOT  |  -          | 
+| TEACHER | CHAR | NOT  |  -          | 
++---------+------+------+-------------+

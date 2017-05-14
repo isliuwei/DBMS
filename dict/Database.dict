@@ -1,0 +1,35 @@
+***********数据库数据字典文件 - Database data dictionary file***********
+
+
+
+关系 S 的数据字典: s s# int not null,sname char,age int,sex char,primary key('s#')
++-------+------+------+-------------+
+| Field | Type | NULL | Remark      | 
++-------+------+------+-------------+
+| S#    | INT  | YES  | primary key | 
+| SNAME | CHAR | NOT  |  -          | 
+| AGE   | INT  | NOT  |  -          | 
+| SEX   | CHAR | NOT  |  -          | 
++-------+------+------+-------------+
+
+
+关系 C 的数据字典: c c# int not null,cname char,teacher char,primary key('c#')
++---------+------+------+-------------+
+| Field   | Type | NULL | Remark      | 
++---------+------+------+-------------+
+| C#      | INT  | YES  | primary key | 
+| CNAME   | CHAR | NOT  |  -          | 
+| TEACHER | CHAR | NOT  |  -          | 
++---------+------+------+-------------+
+
+
+关系 SC 的数据字典: sc no# int not null,s# int,c# int,grade char,primary key('no#')
++-------+------+------+-------------+
+| Field | Type | NULL | Remark      | 
++-------+------+------+-------------+
+| NO#   | INT  | YES  | primary key | 
+| S#    | INT  | NOT  |  -          | 
+| C#    | INT  | NOT  |  -          | 
+| GRADE | CHAR | NOT  |  -          | 
++-------+------+------+-------------+
+

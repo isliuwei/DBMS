@@ -9,6 +9,7 @@
   "dependencies": {
     "colors-cli": "^1.0.7",
     "figlet": "^1.2.0",
+    "object-assign": "^4.1.1",
     "object.values": "^1.0.4",
     "prettytable": "^0.3.1"
   },

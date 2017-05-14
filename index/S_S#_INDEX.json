@@ -1,0 +1,33 @@
+{
+  "name": "S_S#_INDEX",
+  "key": "S#",
+  "type": "INT",
+  "total": 6,
+  "table": "S",
+  "item": [
+    {
+      "value": "S1",
+      "pos": 1
+    },
+    {
+      "value": "S2",
+      "pos": 2
+    },
+    {
+      "value": "S3",
+      "pos": 3
+    },
+    {
+      "value": "S4",
+      "pos": 4
+    },
+    {
+      "value": "S5",
+      "pos": 5
+    },
+    {
+      "value": "S8",
+      "pos": 6
+    }
+  ]
+}

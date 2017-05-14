@@ -1,0 +1,10 @@
+关系 S 的数据字典: s s# int not null,sname char,age int,sex char,primary key('s#')
++-------+------+------+-------------+
+| Field | Type | NULL | Remark      | 
++-------+------+------+-------------+
+| S#    | INT  | YES  | primary key | 
+| SNAME | CHAR | NOT  |  -          | 
+| AGE   | INT  | NOT  |  -          | 
+| SEX   | CHAR | NOT  |  -          | 
++-------+------+------+-------------+
+

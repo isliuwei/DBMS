@@ -1,0 +1,9 @@
+关系 SC 的数据字典: sc no# int not null,s# int,c# int,grade char,primary key('no#')
++-------+------+------+-------------+
+| Field | Type | NULL | Remark      | 
++-------+------+------+-------------+
+| NO#   | INT  | YES  | primary key | 
+| S#    | INT  | NOT  |  -          | 
+| C#    | INT  | NOT  |  -          | 
+| GRADE | CHAR | NOT  |  -          | 
++-------+------+------+-------------+

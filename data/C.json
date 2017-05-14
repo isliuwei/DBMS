@@ -1,0 +1,55 @@
+{
+  "name": "C",
+  "dict": {
+    "C#": {
+      "type": "INT",
+      "default NULL": "YES"
+    },
+    "CNAME": {
+      "type": "CHAR",
+      "default NULL": "NOT"
+    },
+    "TEACHER": {
+      "type": "CHAR",
+      "default NULL": "NOT"
+    },
+    "primary key": "C#"
+  },
+  "users": [
+    "ROOT",
+    "ADMIN"
+  ],
+  "index": [],
+  "data": [
+    {
+      "C#": "INT",
+      "CNAME": "CHAR",
+      "TEACHER": "CHAR"
+    },
+    {
+      "C#": "C1",
+      "CNAME": "DB",
+      "TEACHER": "LI"
+    },
+    {
+      "C#": "C2",
+      "CNAME": "MATHS",
+      "TEACHER": "MA"
+    },
+    {
+      "C#": "C3",
+      "CNAME": "CHEMISTRY",
+      "TEACHER": "ZHOU"
+    },
+    {
+      "C#": "C4",
+      "CNAME": "PHYSICS",
+      "TEACHER": "SHI"
+    },
+    {
+      "C#": "C5",
+      "CNAME": "OS",
+      "TEACHER": "WEN"
+    }
+  ]
+}

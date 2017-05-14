@@ -1,0 +1,33 @@
+{
+  "name": "S_AGE_INDEX",
+  "key": "AGE",
+  "type": "INT",
+  "total": 6,
+  "table": "S",
+  "item": [
+    {
+      "value": "18",
+      "pos": 6
+    },
+    {
+      "value": "19",
+      "pos": 2
+    },
+    {
+      "value": "19",
+      "pos": 4
+    },
+    {
+      "value": "20",
+      "pos": 1
+    },
+    {
+      "value": "21",
+      "pos": 5
+    },
+    {
+      "value": "22",
+      "pos": 3
+    }
+  ]
+}

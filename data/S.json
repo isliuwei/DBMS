@@ -1,0 +1,75 @@
+{
+  "name": "S",
+  "dict": {
+    "S#": {
+      "type": "INT",
+      "default NULL": "YES"
+    },
+    "SNAME": {
+      "type": "CHAR",
+      "default NULL": "NOT"
+    },
+    "AGE": {
+      "type": "INT",
+      "default NULL": "NOT"
+    },
+    "SEX": {
+      "type": "CHAR",
+      "default NULL": "NOT"
+    },
+    "primary key": "S#"
+  },
+  "users": [
+    "ROOT",
+    "ADMIN"
+  ],
+  "index": [
+    "SNAME",
+    "AGE",
+    "S#"
+  ],
+  "data": [
+    {
+      "S#": "INT",
+      "SNAME": "CHAR",
+      "AGE": "INT",
+      "SEX": "CHAR"
+    },
+    {
+      "S#": "S1",
+      "SNAME": "WANG",
+      "AGE": "20",
+      "SEX": "M"
+    },
+    {
+      "S#": "S2",
+      "SNAME": "LIU",
+      "AGE": "19",
+      "SEX": "M"
+    },
+    {
+      "S#": "S3",
+      "SNAME": "CHEN",
+      "AGE": "22",
+      "SEX": "M"
+    },
+    {
+      "S#": "S4",
+      "SNAME": "WU",
+      "AGE": "19",
+      "SEX": "M"
+    },
+    {
+      "S#": "S5",
+      "SNAME": "LOU",
+      "AGE": "21",
+      "SEX": "F"
+    },
+    {
+      "S#": "S8",
+      "SNAME": "DONG",
+      "AGE": "18",
+      "SEX": "F"
+    }
+  ]
+}

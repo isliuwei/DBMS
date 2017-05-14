@@ -1,0 +1,33 @@
+{
+  "name": "S_SNAME_INDEX",
+  "key": "SNAME",
+  "type": "CHAR",
+  "total": 6,
+  "table": "S",
+  "item": [
+    {
+      "value": "WANG",
+      "pos": 1
+    },
+    {
+      "value": "LIU",
+      "pos": 2
+    },
+    {
+      "value": "CHEN",
+      "pos": 3
+    },
+    {
+      "value": "WU",
+      "pos": 4
+    },
+    {
+      "value": "LOU",
+      "pos": 5
+    },
+    {
+      "value": "DONG",
+      "pos": 6
+    }
+  ]
+}
